@@ -21,5 +21,5 @@ jobs:
       test-executable: ''
       upload-artifacts: true
       artifact-name: 'build-output'
-      artifact-path: ''
+      artifact-path: 'artefacts'
     secrets: inherit
