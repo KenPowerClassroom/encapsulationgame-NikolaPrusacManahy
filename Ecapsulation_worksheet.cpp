@@ -22,36 +22,54 @@ public:
 
 
 class Character {
-protected:
+private:
     std::string name;
     int health;
+    int strength;
+    Weapon* currentWeapon;
 
 public:
-    int strength; // multiplier for weapon damage
-    
-	Character(const std::string& characterName, int characterHealth, int characterStrength)
-        : name(characterName), health(characterHealth), 
-          strength(characterStrength), currentWeapon(nullptr) {}
-
-    Weapon* currentWeapon;
-    
-    Weapon* getWeapon() const {
-        return { currentWeapon };
+    Character(const std::string& characterName, int characterHealth, int characterStrength)
+        : name(characterName),
+        health(characterHealth),
+        strength(characterStrength),
+        currentWeapon(nullptr) {
     }
 
-    std::string getName() const { return name; }
-    
+    const std::string& getName() const { return name; }
     int getHealth() const { return health; }
 
-    void setHealth(int newHealth) { health = newHealth; }
+    bool isAlive() const { return health > 0; }
+    bool hasWeapon() const { return currentWeapon != nullptr; }
+
+    void equipWeapon(Weapon* weapon) {
+        currentWeapon = weapon;
+    }
+
+    void heal(int amount) {
+        if (health > 0) {
+            health += amount;
+            std::cout << "Player healed by " << amount << " points.\n";
+        }
+    }
 
     void takeDamage(int damage) {
         health -= damage;
         if (health < 0) health = 0;
-        
+
         std::cout << name << "take damage " << damage << "\n";
     }
 
+    void attack(Character& target) {
+        if (!currentWeapon) return;
+
+        std::cout << name << " attacks " << target.getName()
+            << " with " << currentWeapon->getName() << "\n";
+
+        target.takeDamage(currentWeapon->getDamage() * strength);
+        std::cout << target.getName() << " health: "
+            << target.getHealth() << "\n";
+    }
 };
 
 class Player : public Character {
