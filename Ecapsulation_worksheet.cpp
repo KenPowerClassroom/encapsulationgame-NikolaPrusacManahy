@@ -14,7 +14,7 @@ public:
     Weapon(const std::string& weaponName, int weaponDamage)
         : name(weaponName), damage(weaponDamage) {}
 
-    std::string getName() const { return name; }
+    const std::string& getName() const { return name; }
     int getDamage() const { return damage; }
 
     void setDamage(int newDamage) { damage = newDamage; }
@@ -91,87 +91,78 @@ private:
     Enemy enemy;
     std::vector<Weapon> weapons;
 
+    bool isValidWeaponIndex(int index) const {
+        return index >= 0 && index < static_cast<int>(weapons.size());
+    }
+
+    void equipWeaponByIndex(Character& character, int index) {
+        if (!isValidWeaponIndex(index)) return;
+        character.equipWeapon(&weapons[index]);
+    }
+
 public:
     GameManager(const Player& p, const Enemy& e)
         : player(p), enemy(e) {
-        std::srand(std::time(0)); // Seed for random number generation
+        std::srand(static_cast<unsigned>(std::time(nullptr)));
     }
 
     void addWeapon(const Weapon& weapon) {
         weapons.push_back(weapon);
     }
 
+    void equipPlayerWeapon(int index) {
+        equipWeaponByIndex(player, index);
+    }
+
+    void equipEnemyWeapon(int index) {
+        equipWeaponByIndex(enemy, index);
+    }
+
+    Weapon* equipRandomWeapon(Character& character) {
+        if (weapons.empty()) return nullptr;
+
+        int randomIndex = std::rand() % weapons.size();
+        Weapon* selectedWeapon = &weapons[randomIndex];
+        character.equipWeapon(selectedWeapon);
+        return selectedWeapon;
+    }
+
+    void randomlyHealPlayer() {
+        int healAmount = std::rand() % 50 + 1;
+        player.heal(healAmount);
+    }
+
     int startGame() {
-        std::cout << "Game started: " << player.getName() << " vs " << enemy.getName() << "\n";
+        std::cout << "Game started: "
+            << player.getName() << " vs "
+            << enemy.getName() << "\n";
 
-        // Player and enemy health checks
-        while (player.getHealth() > 0 && enemy.getHealth() > 0) {
-            Weapon* playerWeapon = player.getWeapon();
-            Weapon * enemyWeapon = enemy.getWeapon();
+        if (!player.hasWeapon()) equipRandomWeapon(player);
+        if (!enemy.hasWeapon()) equipRandomWeapon(enemy);
 
-            if (playerWeapon != nullptr && enemyWeapon != nullptr) {
-                std::cout << player.getName() << " attacks " << enemy.getName() << " with " << playerWeapon->getName() << "\n";
-				enemy.takeDamage(playerWeapon->getDamage() * player.strength);
-                std::cout << enemy.getName() << " health: " << enemy.getHealth() << "\n";
+        while (player.isAlive() && enemy.isAlive()) {
+            if (player.hasWeapon() && enemy.hasWeapon()) {
+                player.attack(enemy);
+                if (!enemy.isAlive()) break;
 
-                std::cout << enemy.getName() << " attacks " << player.getName() << " with " << enemyWeapon->getName() << "\n";
-                player.takeDamage(enemyWeapon->getDamage() * enemy.strength);
-                std::cout << player.getName() << " health: " << player.getHealth() << "\n";
+                enemy.attack(player);
+                if (!player.isAlive()) break;
             }
             else {
                 std::cout << "Weapon not equipped. Cannot fight.\n";
                 break;
             }
+
             randomlyHealPlayer();
         }
-        equipRandomWeapon(player);
-        equipRandomWeapon(enemy);
 
-
-        
         if (player.getHealth() <= 0) {
             std::cout << player.getName() << " has been defeated.\n";
             return 1;
         }
-        else if (enemy.getHealth() <= 0) {
+        else {
             std::cout << enemy.getName() << " has been defeated.\n";
             return 0;
-        }
-    }
-
-    void equipPlayerWeapon(int weaponIndex) {
-        if (weaponIndex >= 0 && weaponIndex < weapons.size()) {
-            player.currentWeapon=&weapons[weaponIndex];
-        }
-    }
-
-    void equipEnemyWeapon(int weaponIndex) {
-        if (weaponIndex >= 0 && weaponIndex < weapons.size()) {
-            enemy.currentWeapon = &weapons[weaponIndex];
-        }
-    }
-
-
-    Weapon* equipRandomWeapon(Character& character) {
-
-        if (weapons.empty()) {
-            return nullptr;
-        }
-        int randomIndex = std::rand() % weapons.size();
-        Weapon* selectedWeapon = &weapons[randomIndex];
-        character.currentWeapon = selectedWeapon;
-        return selectedWeapon;
-    }
-
-    void randomlyHealPlayer() {
-        int healAmount = std::rand() % 50 + 1; // heal between 1 and 50 point
-        healPlayer(healAmount);
-    }
-
-    void healPlayer(int amount) {
-        if (player.getHealth() > 0) {
-            player.setHealth(player.getHealth() + amount);
-            std::cout << "Player healed by " << amount << " points.\n";
         }
     }
 };
