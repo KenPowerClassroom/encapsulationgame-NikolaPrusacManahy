@@ -169,7 +169,6 @@ public:
 
 // Main Function
 int main() {
-
     Player player("Hero", 300, 2);
     Enemy enemy("Goblin", 150, 4);
 
@@ -185,12 +184,9 @@ int main() {
     game.addWeapon(dagger);
     game.addWeapon(bow);
 
-    // Equip weapons
-    game.equipPlayerWeapon(0); // Equip sword to player
-    game.equipEnemyWeapon(1);  // Equip axe to enemy
-
+    game.equipPlayerWeapon(0);
+    game.equipEnemyWeapon(1);
 
     game.startGame();
-
     return 0;
 }
